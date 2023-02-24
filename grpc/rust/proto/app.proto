@@ -1,0 +1,14 @@
+syntax = "proto3";
+package app;
+
+service App {
+    rpc get(req) returns (resp);
+}
+
+message req {
+    string name = 1;
+}
+
+message resp {
+    string value = 1;
+}

@@ -1,0 +1,16 @@
+syntax = "proto3";
+package app;
+
+option go_package = "./";
+
+service App {
+	rpc get(Req) returns (Resp);
+}
+
+message Req {
+	string name = 1;
+}
+
+message Resp {
+	string value = 1;
+}
