@@ -26,7 +26,7 @@ fn main() -> std::io::Result<()> {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    let mut buffer = [0; 1024];
+    let mut buf = [0; 1024];
     stream.set_read_timeout(Some(TIMEOUT)).unwrap();
     stream.set_write_timeout(Some(TIMEOUT)).unwrap();
     for i in 0..NUM_ITER {
@@ -51,13 +51,13 @@ fn handle_connection(mut stream: TcpStream) {
             return;
         }
         println!("Receiving");
-        let read_res = stream.read(&mut buffer);
+        let read_res = stream.read(&mut buf);
         match read_res {
             Ok(n) => {
                 if n ==0 {
                     break;
                 }
-                println!("Received: {}", from_utf8(&buffer[0..n]).unwrap());
+                println!("Received: {}", from_utf8(&buf[0..n]).unwrap());
             }
             Err(e) => {
                 println!("{}", e);

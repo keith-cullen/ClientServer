@@ -5,11 +5,20 @@ edition = "2021"
 authors = ["user <email>"]
 
 [[bin]]
-name = "client"
-path = "src/client.rs"
+name = "client_sync"
+path = "src/client_sync.rs"
 
 [[bin]]
-name = "server"
-path = "src/server.rs"
+name = "server_sync"
+path = "src/server_sync.rs"
+
+[[bin]]
+name = "client_async"
+path = "src/client_async.rs"
+
+[[bin]]
+name = "server_async"
+path = "src/server_async.rs"
 
 [dependencies]
+tokio = { version = "1", features = ["full"] }

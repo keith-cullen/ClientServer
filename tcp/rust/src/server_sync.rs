@@ -15,10 +15,11 @@ fn main() -> std::io::Result<()> {
     let listener = TcpListener::bind("0.0.0.0:12345")?;
     println!("Listening");
     let mut index: u32 = 0;
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                println!("Accepted connection from {}", stream.peer_addr().unwrap());
+    loop {
+        let res = listener.accept();
+        match res {
+            Ok((stream, addr)) => {
+                println!("Accepted connection from {}", addr);
                 thread::spawn(move || {
                     handle_connection(index, stream)
                 });
@@ -29,25 +30,24 @@ fn main() -> std::io::Result<()> {
             }
         }
     }
-    Ok(())
 }
 
 fn handle_connection(index: u32, mut stream: TcpStream) {
-    let mut buffer = [0; 1024];
+    let mut buf = [0; 1024];
     stream.set_read_timeout(Some(TIMEOUT)).unwrap();
     stream.set_write_timeout(Some(TIMEOUT)).unwrap();
     println!("<{}> Connection open", index);
     loop {
         println!("<{}> Receiving", index);
         let num;
-        let read_res = stream.read(&mut buffer);
+        let read_res = stream.read(&mut buf);
         match read_res {
             Ok(n) => {
                 if n == 0 {
                     println!("<{}> EOF", index);
                     break;
                 }
-                println!("<{}> Received: {}", index, from_utf8(&buffer[0..n]).unwrap());
+                println!("<{}> Received: {}", index, from_utf8(&buf[0..n]).unwrap());
                 num = n;
             }
             Err(e) => {
@@ -56,13 +56,13 @@ fn handle_connection(index: u32, mut stream: TcpStream) {
             }
         }
         println!("<{}> Sending", index);
-        let write_res = stream.write(&buffer[0..num]);
+        let write_res = stream.write(&buf[0..num]);
         match write_res {
             Ok(n) => {
                 if n == 0 {
                     break;
                 }
-                println!("<{}> Sent: {}", index, from_utf8(&buffer[0..n]).unwrap());
+                println!("<{}> Sent: {}", index, from_utf8(&buf[0..n]).unwrap());
             }
             Err(e) => {
                 println!("<{}> {}", index, e);
