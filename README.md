@@ -12,9 +12,9 @@ A gRPC/TLS/TCP client/server in Go and Rust, TLS/TCP client/Server in Go and Rus
 
     $ cd /tmp
 
-    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v22.0/protoc-22.0-linux-x86_64.zip
+    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v28.0/protoc-28.0-linux-x86_64.zip
 
-    $ unzip protoc-22.0-linux-x86_64.zip
+    $ unzip protoc-28.0-linux-x86_64.zip
 
     $ sudo cp bin/protoc /usr/local/bin
 
