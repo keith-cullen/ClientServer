@@ -14,7 +14,7 @@ const ROOT_CLIENT_CERT: &str = "../../certs/root_client_cert.pem";
 const SERVER_CERT: &str = "../../certs/server_cert.pem";
 const SERVER_PRIVKEY: &str = "../../certs/server_privkey.pem";
 const HOST: &str = "0.0.0.0";
-const PORT: &str = "12345";
+const PORT: &str = "50052";
 
 #[derive(Default)]
 pub struct MyServer {}
