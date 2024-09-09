@@ -14,7 +14,7 @@ const ROOT_SERVER_CERT: &str = "../../certs/root_server_cert.pem";
 const CLIENT_CERT: &str = "../../certs/client_cert.pem";
 const CLIENT_PRIVKEY: &str = "../../certs/client_privkey.pem";
 const HOST: &str = "localhost";
-const URI: &str = "http://localhost:12345";
+const URI: &str = "http://localhost:50052";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
