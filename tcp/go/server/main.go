@@ -14,61 +14,63 @@ import (
 const (
 	network = "tcp"
 	address = "0.0.0.0:12345"
-	bufSize = 1024
 	timeout = time.Second
+	bufSize = 1024
 )
 
 func main() {
 	listener, err := net.Listen(network, address)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
-	log.Println("Listening")
+	log.Println("listening")
 	var index int
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Printf("Warning: %v", err)
+			log.Printf("warning: %v", err)
 			continue
 		}
-		log.Println("Accepted connection from", conn.RemoteAddr())
-		go handleConn(index, conn)
+		log.Println("accepted connection from", conn.RemoteAddr())
+		go func(index int) {
+			log.Printf("<%v> connection open", index)
+			handleConn(index, conn)
+			conn.Close()
+			log.Printf("<%v> connection closed", index)
+		}(index)
 		index++
 	}
 }
 
 func handleConn(index int, conn net.Conn) {
-	defer conn.Close()
 	deadline := time.Now().Add(timeout)
 	conn.SetDeadline(deadline)
-	log.Printf("<%v> Connection open", index)
-	defer log.Printf("<%v> Connection closed", index)
 	var buf [bufSize]byte
 	for {
-		log.Printf("<%v> Receiving", index)
+		log.Printf("<%v> receiving", index)
 		n, err := conn.Read(buf[0:])
 		if err != nil {
 			e, ok := err.(net.Error)
 			if ok && e.Timeout() {
-				log.Printf("<%v> Read operation timed out", index)
+				log.Printf("<%v> read operation timed out", index)
 			} else {
 				log.Printf("<%v> %v", index, err)
 			}
 			return
 		}
-		log.Printf("<%v> Received: %v", index, string(buf[0:n]))
+		log.Printf("<%v> received: %v", index, string(buf[0:n]))
 
-		log.Printf("<%v> Sending", index)
+		log.Printf("<%v> sending", index)
 		n, err = conn.Write(buf[0:n])
 		if err != nil {
 			e, ok := err.(net.Error)
 			if ok && e.Timeout() {
-				log.Printf("<%v> Write operation timed out", index)
+				log.Printf("<%v> write operation timed out", index)
 			} else {
 				log.Printf("<%v> %v", index, err)
 			}
 			return
 		}
-		log.Printf("<%v> Sent: %v", index, string(buf[0:n]))
+		log.Printf("<%v> sent: %v", index, string(buf[0:n]))
 	}
 }

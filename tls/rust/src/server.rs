@@ -14,49 +14,49 @@ use std::time::Duration;
 use std::sync::Arc;
 use std::thread;
 
-const ROOT_CLIENT_CERT: &str = "../../certs/root_client_cert.pem";
-const SERVER_CERT: &str = "../../certs/server_cert.pem";
-const SERVER_PRIVKEY: &str = "../../certs/server_privkey.pem";
+const CA_CERT_PATH: &str = "../../certs/ca.crt";
+const CERT_PATH: &str = "../../certs/server.crt";
+const KEY_PATH: &str = "../../certs/server.key";
 const HOST: &str = "0.0.0.0";
 const PORT: &str = "12345";
 const TIMEOUT: Duration = Duration::new(1, 0);
 
 fn main() -> std::io::Result<()> {
-    let server_addr = format!("{}:{}", HOST, PORT);
+    let addr = format!("{}:{}", HOST, PORT);
 
-    let root_client_cert_file = File::open(ROOT_CLIENT_CERT)?;
-    let mut root_client_cert_reader = BufReader::new(root_client_cert_file);
-    let root_client_certs = rustls_pemfile::certs(&mut root_client_cert_reader)?;
-    if root_client_certs.len() < 1 {
+    let ca_cert_file = File::open(CA_CERT_PATH)?;
+    let mut ca_cert_reader = BufReader::new(ca_cert_file);
+    let ca_certs = rustls_pemfile::certs(&mut ca_cert_reader)?;
+    if ca_certs.len() < 1 {
         let msg = "Root client certificate not found";
         println!("{}", msg);
         return Ok(())
     }
-    let root_client_cert = &root_client_certs[0];
-    let root_client_certificate = rustls::Certificate(root_client_cert.to_vec());
-    let mut root_client_store = rustls::RootCertStore::empty();
-    root_client_store.add(&root_client_certificate).unwrap();
-    let client_auth = rustls::server::AllowAnyAuthenticatedClient::new(root_client_store);
+    let ca_cert = &ca_certs[0];
+    let ca_certificate = rustls::Certificate(ca_cert.to_vec());
+    let mut ca_store = rustls::RootCertStore::empty();
+    ca_store.add(&ca_certificate).unwrap();
+    let client_auth = rustls::server::AllowAnyAuthenticatedClient::new(ca_store);
 
-    let server_cert_file = File::open(SERVER_CERT)?;
-    let mut server_cert_reader = BufReader::new(server_cert_file);
-    let server_certs = rustls_pemfile::certs(&mut server_cert_reader)?;
-    if server_certs.len() < 1 {
+    let cert_file = File::open(CERT_PATH)?;
+    let mut cert_reader = BufReader::new(cert_file);
+    let certs = rustls_pemfile::certs(&mut cert_reader)?;
+    if certs.len() < 1 {
         let msg = "Server certificate not found";
         println!("{}", msg);
         return Ok(());
     }
-    let server_cert = &server_certs[0];
-    let mut server_certificates = Vec::new();
-    server_certificates.push(rustls::Certificate(server_cert.to_vec()));
+    let cert = &certs[0];
+    let mut certificate = Vec::new();
+    certificate.push(rustls::Certificate(cert.to_vec()));
 
-    let server_privkey;
-    let server_privkey_file = File::open(SERVER_PRIVKEY)?;
-    let mut server_privkey_reader = BufReader::new(server_privkey_file);
-    match rustls_pemfile::read_one(&mut server_privkey_reader)? {
-        Some(rustls_pemfile::Item::RSAKey(key)) => server_privkey = rustls::PrivateKey(key),
-        Some(rustls_pemfile::Item::PKCS8Key(key)) => server_privkey = rustls::PrivateKey(key),
-        Some(rustls_pemfile::Item::ECKey(key)) => server_privkey = rustls::PrivateKey(key),
+    let key;
+    let key_file = File::open(KEY_PATH)?;
+    let mut key_reader = BufReader::new(key_file);
+    match rustls_pemfile::read_one(&mut key_reader)? {
+        Some(rustls_pemfile::Item::RSAKey(item)) => key = rustls::PrivateKey(item),
+        Some(rustls_pemfile::Item::PKCS8Key(item)) => key = rustls::PrivateKey(item),
+        Some(rustls_pemfile::Item::ECKey(item)) => key = rustls::PrivateKey(item),
         Some(_) => {
             let msg = "Server private key not recognised";
             println!("{}", msg);
@@ -72,9 +72,9 @@ fn main() -> std::io::Result<()> {
     let tls_config = Arc::new(rustls::ServerConfig::builder()
                               .with_safe_defaults()
                               .with_client_cert_verifier(client_auth)
-                              .with_single_cert(server_certificates, server_privkey)
+                              .with_single_cert(certificate, key)
                               .unwrap());
-    let tcp_listener = TcpListener::bind(server_addr)?;
+    let tcp_listener = TcpListener::bind(addr)?;
     println!("Listening");
     let mut index: u32 = 0;
     for tcp_stream in tcp_listener.incoming() {

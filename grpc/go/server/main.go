@@ -9,9 +9,9 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"log"
 	"net"
+	"os"
 
 	app "github.com/keith-cullen/ClientServer/grpc/go/server/app"
 	"google.golang.org/grpc"
@@ -21,10 +21,10 @@ import (
 )
 
 const (
-	rootClientCert = "../../../certs/root_client_cert.pem"
-	serverCert = "../../../certs/server_cert.pem"
-	serverPrivkey = "../../../certs/server_privkey.pem"
-	port = ":50051"
+	caCertPath = "../../../certs/ca.crt"
+	certPath   = "../../../certs/server.crt"
+	keyPath    = "../../../certs/server.key"
+	port       = ":50051"
 )
 
 type server struct {
@@ -32,15 +32,15 @@ type server struct {
 }
 
 func main() {
-	caCert, err := ioutil.ReadFile(rootClientCert)
+	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	cert, err := tls.LoadX509KeyPair(serverCert, serverPrivkey)
+	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 	tlsConfig := tls.Config{
 		Certificates: []tls.Certificate{cert},
@@ -54,19 +54,19 @@ func main() {
 	app.RegisterAppServer(s, &server{})
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
-	log.Printf("Starting gRPC listener")
+	log.Printf("starting gRPC listener")
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 }
 
 func (s *server) Get(ctx context.Context, req *app.Req) (*app.Resp, error) {
 	if req.Name == "key1" {
 		val := "val1"
-		log.Printf("Get Name: '%v', Value: '%v'", req.Name, val)
+		log.Printf("get name: '%v', value: '%v'", req.Name, val)
 		return &app.Resp{Value: val}, status.New(codes.OK, "").Err()
 	}
-	return nil, status.Errorf(codes.NotFound, "Name not found '%v'", req.Name)
+	return nil, status.Errorf(codes.NotFound, "name not found '%v'", req.Name)
 }

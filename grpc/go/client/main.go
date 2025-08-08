@@ -9,8 +9,8 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"log"
+	"os"
 	"time"
 
 	app "github.com/keith-cullen/ClientServer/grpc/go/client/app"
@@ -19,23 +19,23 @@ import (
 )
 
 const (
-	rootServerCert = "../../../certs/root_server_cert.pem"
-	clientCert = "../../../certs/client_cert.pem"
-	clientPrivkey = "../../../certs/client_privkey.pem"
-	hostname = "localhost"
-	port = "50051"
+	caCertPath = "../../../certs/ca.crt"
+	certPath   = "../../../certs/client.crt"
+	keyPath    = "../../../certs/client.key"
+	hostname   = "localhost"
+	port       = "50051"
 )
 
 func main() {
-	caCert, err := ioutil.ReadFile(rootServerCert)
+	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	cert, err := tls.LoadX509KeyPair(clientCert, clientPrivkey)
+	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 	tlsConfig := tls.Config{
 		ServerName:   hostname,
@@ -46,9 +46,9 @@ func main() {
 		grpc.WithTransportCredentials(credentials.NewTLS(&tlsConfig)),
 	}
 	address := hostname + ":" + port
-	conn, err := grpc.Dial(address, opts...)
+	conn, err := grpc.NewClient(address, opts...)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
 	defer conn.Close()
 	c := app.NewAppClient(conn)
@@ -57,7 +57,7 @@ func main() {
 	name := "key1"
 	r1, err := c.Get(ctx, &app.Req{Name: name})
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("error: %v", err)
 	}
-	log.Printf("Get Name: '%v', Value: '%v'", name, r1.Value)
+	log.Printf("get name: '%v', value: '%v'", name, r1.Value)
 }

@@ -10,22 +10,22 @@ use rustgrpc::app;
 use app::app_client::AppClient;
 use app::Req;
 
-const ROOT_SERVER_CERT: &str = "../../certs/root_server_cert.pem";
-const CLIENT_CERT: &str = "../../certs/client_cert.pem";
-const CLIENT_PRIVKEY: &str = "../../certs/client_privkey.pem";
+const CA_CERT_PATH: &str = "../../certs/ca.crt";
+const CERT_PATH: &str = "../../certs/client.crt";
+const KEY_PATH: &str = "../../certs/client.key";
 const HOST: &str = "localhost";
 const URI: &str = "http://localhost:50052";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let root_server_cert = std::fs::read_to_string(ROOT_SERVER_CERT)?;
-    let root_server_cert = Certificate::from_pem(root_server_cert);
-    let client_cert = std::fs::read_to_string(CLIENT_CERT)?;
-    let client_privkey = std::fs::read_to_string(CLIENT_PRIVKEY)?;
-    let client_identity = Identity::from_pem(client_cert, client_privkey);
+    let ca_cert = std::fs::read_to_string(CA_CERT_PATH)?;
+    let ca_cert = Certificate::from_pem(ca_cert);
+    let cert = std::fs::read_to_string(CERT_PATH)?;
+    let key = std::fs::read_to_string(KEY_PATH)?;
+    let identity = Identity::from_pem(cert, key);
     let tls_config = ClientTlsConfig::new()
-                     .identity(client_identity)
-                     .ca_certificate(root_server_cert)
+                     .identity(identity)
+                     .ca_certificate(ca_cert)
                      .domain_name(HOST);
     let channel = Channel::from_static(URI)
                   .tls_config(tls_config)?

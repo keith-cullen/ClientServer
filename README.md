@@ -234,14 +234,26 @@ A gRPC/TLS/TCP client/server in Go and Rust, TLS/TCP client/Server in Go and Rus
 
 #### Rust
 
-1. Run the server
+1. Run the synchronous server
 
         $ cd tcp/rust
 
-        $ cargo run --bin server
+        $ cargo run --bin server_sync
 
-2. Run the client
+2. Run the synchronous client
 
         $ cd tcp/rust
 
-        $ cargo run --bin client
+        $ cargo run --bin client_sync
+
+3. Run the asynchronous server
+
+        $ cd tcp/rust
+
+        $ cargo run --bin server_async
+
+4. Run the asynchronous client
+
+        $ cd tcp/rust
+
+        $ cargo run --bin client_async

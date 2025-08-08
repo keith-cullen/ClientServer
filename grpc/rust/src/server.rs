@@ -10,9 +10,9 @@ use rustgrpc::app;
 use app::app_server::{AppServer, App};
 use app::{Req, Resp};
 
-const ROOT_CLIENT_CERT: &str = "../../certs/root_client_cert.pem";
-const SERVER_CERT: &str = "../../certs/server_cert.pem";
-const SERVER_PRIVKEY: &str = "../../certs/server_privkey.pem";
+const CA_CERT_PATH: &str = "../../certs/ca.crt";
+const CERT_PATH: &str = "../../certs/server.crt";
+const KEY_PATH: &str = "../../certs/server.key";
 const HOST: &str = "0.0.0.0";
 const PORT: &str = "50052";
 
@@ -31,20 +31,20 @@ impl App for MyServer {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server_addr = format!("{}:{}", HOST, PORT).parse()?;
-    let root_client_cert = std::fs::read_to_string(ROOT_CLIENT_CERT)?;
-    let root_client_cert = Certificate::from_pem(root_client_cert);
-    let server_cert = std::fs::read_to_string(SERVER_CERT)?;
-    let server_privkey = std::fs::read_to_string(SERVER_PRIVKEY)?;
-    let server_identity = Identity::from_pem(server_cert, server_privkey);
+    let addr = format!("{}:{}", HOST, PORT).parse()?;
+    let ca_cert = std::fs::read_to_string(CA_CERT_PATH)?;
+    let ca_cert = Certificate::from_pem(ca_cert);
+    let cert = std::fs::read_to_string(CERT_PATH)?;
+    let key = std::fs::read_to_string(KEY_PATH)?;
+    let identity = Identity::from_pem(cert, key);
     let tls_config = ServerTlsConfig::new()
-                     .identity(server_identity)
-                     .client_ca_root(root_client_cert);
+                     .identity(identity)
+                     .client_ca_root(ca_cert);
     let app_server = MyServer::default();
     Server::builder()
         .tls_config(tls_config)?
         .add_service(AppServer::new(app_server))
-        .serve(server_addr)
+        .serve(addr)
         .await?;
 
     Ok(())
